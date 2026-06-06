@@ -36,7 +36,7 @@ made me want to build something better.
 
 ## Project Status
 
-🚧 **In active development** — started June 2025
+🚧 **In active development** — started June 2026
 
 | Phase | Feature | Status |
 |-------|---------|--------|
