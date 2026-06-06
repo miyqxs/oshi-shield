@@ -7,3 +7,9 @@ comments about creators' real identities. It made me uncomfortable and curious a
 
 **First technical challenge:**
 Getting familiar with the YouTube Data API v3 documentation.
+
+** June 6, 2026 — First successful test:**
+Connected to a live Japanese YouTube stream and successfully 
+read real-time chat messages. Bot correctly handles Japanese 
+characters. Next step: add detection engine to flag harmful 
+content patterns.
