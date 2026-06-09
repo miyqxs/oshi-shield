@@ -13,3 +13,11 @@ Connected to a live Japanese YouTube stream and successfully
 read real-time chat messages. Bot correctly handles Japanese 
 characters. Next step: add detection engine to flag harmful 
 content patterns.
+
+**June 9, 2026 — Phase 2 done:**
+Built the actual detection engine today. It now flags doxxing 
+patterns and hate speech in real time across three languages — 
+English, Russian, and Japanese. Tested it on a live Japanese 
+stream and it correctly showed green checkmarks for normal 
+messages. No false positives yet which is honestly surprising.
+
