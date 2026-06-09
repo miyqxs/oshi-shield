@@ -40,11 +40,11 @@ made me want to build something better.
 
 | Phase | Feature | Status |
 |-------|---------|--------|
-| 1 | YouTube API connection + message logging | 🔄 In progress |
-| 2 | Doxxing pattern detection | ⏳ Planned |
-| 2 | Hate speech detection (EN/RU/JP) | ⏳ Planned |
-| 3 | Coordination detection | ⏳ Planned |
-| 4 | Web dashboard | ⏳ Planned |
+| 1 | YouTube API connection + message logging | ✅ Done |
+| 2 | Doxxing pattern detection | ✅ Done |
+| 3 | Hate speech detection (EN/RU/JP) | ✅ Done |
+| 4 | Coordination detection | ⏳ Planned |
+| 5 | Web dashboard | ⏳ Planned |
 
 ---
 
