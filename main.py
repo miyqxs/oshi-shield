@@ -1,5 +1,6 @@
 import os
 import time
+from coordinator import CoordinationDetector
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from colorama import Fore, Style, init
@@ -50,6 +51,7 @@ def main():
 
     print(f"Connected! Monitoring for harmful content...\n")
     seen_ids = set()
+    coordinator = CoordinationDetector(time_window_seconds=60, threshold=3)
 
     while True:
         messages = get_chat_messages(chat_id)
@@ -60,6 +62,12 @@ def main():
                 author = msg["authorDetails"]["displayName"]
                 text = msg["snippet"]["displayMessage"]
                 result = analyze_message(author, text)
+                # Check coordination
+                coordinated, count = coordinator.add_and_check(author, text)
+                if coordinated:
+                    result["flagged"] = True
+                    result["reasons"].append(f"Coordinated attack: {count} accounts same message")
+
                 display_message(result)
         time.sleep(5)
 
