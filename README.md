@@ -1,77 +1,77 @@
 # OshiShield 🛡️
 
-> Real-time livestream moderation system to detect doxxing, coordinated harassment,
-> and hate speech targeting anonymous content creators.
+A real-time bot that monitors YouTube live chats and tries to catch doxxing 
+attempts, harassment, and hate speech before they spread — built specifically 
+with anonymous content creators in mind.
 
 ---
 
-## The Problem
+## Why I'm building this
 
-Anonymous content creators — artists, streamers, and performers who deliberately
-choose to hide their identity — face a unique and growing threat online.
+Artists and streamers who choose to stay anonymous — utaite, vtubers, indie 
+musicians — deal with a weird kind of harassment that most moderation tools 
+just weren't built for. People try to leak their real names, find their 
+addresses, post personal info in chat, sometimes within seconds of a stream 
+starting. And it's often not even one person doing it — it's a bunch of 
+accounts piling on at once.
 
-On platforms like YouTube Live, coordinated harassment campaigns can appear within
-seconds. Fans attempt to leak personal information (doxxing), post real names,
-share addresses, or flood chats with hate speech. Existing platform moderation
-tools react slowly and were not designed with anonymous creators in mind.
-
-I became aware of this problem through my own experience running a YouTube channel
-translating Japanese livestreams for Russian and English-speaking audiences. 
-Watching harassment unfold in real time — and seeing platforms fail to stop it —
-made me want to build something better.
-
----
-
-## What OshiShield Does
-
-- **Connects** to YouTube Live Chat API and reads messages in real time
-- **Detects** doxxing attempts using pattern recognition (phone numbers, addresses,
-  personal identifiers)
-- **Flags** hate speech using multilingual keyword detection (English, Russian, Japanese)
-- **Identifies** coordinated harassment by tracking repeated messages across
-  multiple accounts within a time window
-- **Alerts** the streamer or moderator before harmful content spreads
+I noticed this firsthand running a YouTube channel where I translate Japanese 
+livestreams for Russian and English-speaking fans. Spending hours in live 
+chats, you start seeing the same harassment patterns over and over. Platforms 
+mostly just don't catch it fast enough, or at all. So I started building 
+something that could.
 
 ---
 
-## Project Status
+## What it actually does right now
 
-🚧 **In active development** — started June 2026
-
-| Phase | Feature | Status |
-|-------|---------|--------|
-| 1 | YouTube API connection + message logging | ✅ Done |
-| 2 | Doxxing pattern detection | ✅ Done |
-| 3 | Hate speech detection (EN/RU/JP) | ✅ Done |
-| 4 | Coordination detection | ✅ Done |
-| 5 | Data logging for research dataset | ✅ Done |
-| 6 | Web dashboard | ⏳ Planned |
+- Connects to YouTube Live Chat and reads messages as they come in
+- Flags doxxing attempts (phone numbers, addresses, "found their real name" type stuff)
+- Catches hate speech in English, Russian, and Japanese
+- Detects when multiple accounts post the same harmful message at once — basically catching coordinated pile-ons, not just one rude comment
+- Logs everything locally so I can actually go back and study what gets flagged
 
 ---
 
-## Research Motivation
+## Where it's at
 
-This project sits at the intersection of **information systems**, **online community
-behavior**, and **digital privacy**. The core research question driving it:
+🚧 still actively building this, started June 2026
 
-> *Can we design automated systems that protect chosen anonymity at scale —
-> detecting not just harmful content, but harmful patterns of behavior?*
-
-Development notes and research thinking are documented in [`docs/research_notes.md`](docs/research_notes.md).
+| Phase | What | Status |
+|-------|------|--------|
+| 1 | Connect to YouTube API, read live chat | ✅ done |
+| 2 | Doxxing detection | ✅ done |
+| 3 | Hate speech detection (EN/RU/JP) | ✅ done |
+| 4 | Coordination detection | ✅ done |
+| 5 | Logging data for research | ✅ done |
+| 6 | Web dashboard | ⏳ working on it |
 
 ---
 
-## Tech Stack
+## The bigger question I'm actually trying to answer
+
+This isn't just "make a moderation bot." What I actually care about is:
+
+> can you build something that protects people's chosen anonymity, by catching 
+> *patterns* of bad behavior, not just bad words?
+
+I'm keeping track of what I learn (and what breaks, and what I get wrong) in 
+[`docs/research_notes.md`](docs/research_notes.md) — it's pretty unfiltered, 
+basically my actual thought process as I build this.
+
+---
+
+## Built with
 
 - Python 3.11+
 - YouTube Data API v3
 - `google-api-python-client`
-- `colorama` (terminal display)
-- Flask (web dashboard — Phase 4)
+- `colorama` for the terminal output
+- Flask (coming soon, for the dashboard)
 
 ---
 
-## Setup
+## Running it yourself
 
 ```bash
 git clone https://github.com/miyqxs/oshi-shield.git
@@ -79,21 +79,23 @@ cd oshi-shield
 pip install -r requirements.txt
 ```
 
-Add your YouTube Data API key to a `.env` file:
-```
+Make a `.env` file and drop your YouTube API key in:
+```bash
 YOUTUBE_API_KEY=your_key_here
 ```
-
-Then run:
+Then:
 ```bash
-python main.py --video-id YOUR_LIVE_VIDEO_ID
+python main.py
 ```
+
+It'll ask for a live video ID and start monitoring.
 
 ---
 
-## About
+## About me
 
-Built by a multilingual developer and Japanese music community translator from
-Kazakhstan, currently studying information technology.
+Kazakh student, speak 5 languages, run a YouTube channel translating Japanese 
+livestreams (mostly Ado content, mostly). Got into coding because I wanted 
+to actually solve this problem, not just watch it happen.
 
-Questions or collaboration: open an issue or reach out via GitHub.
+Feel free to open an issue if you find bugs or have ideas.
