@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from colorama import Fore, Style, init
 from detector import analyze_message
+from logger import log_message
 
 init()  # Start colorama
 
@@ -69,6 +70,7 @@ def main():
                     result["reasons"].append(f"Coordinated attack: {count} accounts same message")
 
                 display_message(result)
+                log_message(result, video_id)
         time.sleep(5)
 
 if __name__ == "__main__":
