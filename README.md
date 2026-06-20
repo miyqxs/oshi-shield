@@ -43,8 +43,9 @@ made me want to build something better.
 | 1 | YouTube API connection + message logging | ✅ Done |
 | 2 | Doxxing pattern detection | ✅ Done |
 | 3 | Hate speech detection (EN/RU/JP) | ✅ Done |
-| 4 | Coordination detection | ⏳ Planned |
-| 5 | Web dashboard | ⏳ Planned |
+| 4 | Coordination detection | ✅ Done |
+| 5 | Data logging for research dataset | ✅ Done |
+| 6 | Web dashboard | ⏳ Planned |
 
 ---
 

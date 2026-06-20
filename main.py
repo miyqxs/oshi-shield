@@ -55,7 +55,13 @@ def main():
     coordinator = CoordinationDetector(time_window_seconds=60, threshold=3)
 
     while True:
-        messages = get_chat_messages(chat_id)
+        try:
+            messages = get_chat_messages(chat_id)
+        except Exception as e:
+            print(f"⚠️  Connection hiccup, retrying in 5s... ({e})")
+            time.sleep(5)
+            continue
+
         for msg in messages:
             msg_id = msg["id"]
             if msg_id not in seen_ids:
@@ -64,7 +70,7 @@ def main():
                 text = msg["snippet"]["displayMessage"]
                 result = analyze_message(author, text)
                 # Check coordination
-                coordinated, count = coordinator.add_and_check(author, text)
+                coordinated, count = coordinator.add_and_check(author, text, is_harmful=result["flagged"])
                 if coordinated:
                     result["flagged"] = True
                     result["reasons"].append(f"Coordinated attack: {count} accounts same message")

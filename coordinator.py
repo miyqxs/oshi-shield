@@ -12,27 +12,24 @@ class CoordinationDetector:
         self.time_window = timedelta(seconds=time_window_seconds)
         self.threshold = threshold  # how many accounts = coordinated
     
-    def add_and_check(self, author, text):
+    def add_and_check(self, author, text, is_harmful=False):
         now = datetime.now()
         
-        # Add new message
         self.messages.append({
             "author": author,
             "text": text.lower().strip(),
-            "time": now
+            "time": now,
+            "harmful": is_harmful
         })
         
-        # Clean messages outside time window
         cutoff = now - self.time_window
         self.messages = [m for m in self.messages if m["time"] > cutoff]
         
-        # Count unique authors sending same message
         text_clean = text.lower().strip()
-        matching_authors = set(
-            m["author"] for m in self.messages 
-            if m["text"] == text_clean
-        )
+        matching = [m for m in self.messages if m["text"] == text_clean]
+        matching_authors = set(m["author"] for m in matching)
         
-        if len(matching_authors) >= self.threshold:
+        # Only flag if it's coordinated AND the content itself is harmful
+        if len(matching_authors) >= self.threshold and is_harmful:
             return True, len(matching_authors)
         return False, 0
