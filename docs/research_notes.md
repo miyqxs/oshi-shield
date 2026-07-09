@@ -52,3 +52,20 @@ Important — I'm NOT pushing the real data to GitHub. It's still other people's
 
 **What's next:**
 Want to run this across a bunch of different streams over the next couple weeks — Japanese for sure, English and Russian if I can find live ones with active chat. Trying to get enough real data that I can say something actually meaningful instead of just "it worked on one test stream once."
+
+**July 2026 — First real dataset analysis:**
+Ran analyzer across 3949 messages from 8 streams. Zero 
+genuine harassment detected, one false positive flagged —
+"ローレンのこと嫌いだって" (roughly "apparently Pink hates Lauren 
+too") triggered the doxxing detector because it contains 
+a Western name. Not actual doxxing at all.
+
+So now I have two documented false positive patterns:
+- Common reaction words triggering coordination detection (ナイス)
+- Western names in casual conversation triggering doxxing detection (ローレン)
+
+Both point to the same underlying problem: pattern matching 
+without context awareness produces noise. The system needs 
+to understand INTENT, not just surface patterns. That's 
+probably the core limitation to write about in the research 
+findings.
