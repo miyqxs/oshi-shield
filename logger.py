@@ -13,9 +13,6 @@ def ensure_data_folder():
 def log_message(result, video_id):
     ensure_data_folder()
     
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    
     entry = {
         "timestamp": datetime.now().isoformat(),
         "video_id": video_id,
@@ -25,7 +22,20 @@ def log_message(result, video_id):
         "reasons": result["reasons"]
     }
     
+    # Read existing data safely
+    try:
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
+        data = []
+    
     data.append(entry)
     
-    with open(LOG_FILE, "w", encoding="utf-8") as f:
+    # Write safely using a temp file
+    temp_file = LOG_FILE + ".tmp"
+    with open(temp_file, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    # Only replace original after successful write
+    import os
+    os.replace(temp_file, LOG_FILE)
