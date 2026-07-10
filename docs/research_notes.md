@@ -69,3 +69,36 @@ without context awareness produces noise. The system needs
 to understand INTENT, not just surface patterns. That's 
 probably the core limitation to write about in the research 
 findings.
+
+The false positive came from a NIJISANJI VTuber stream — 
+Lauren Iroas playing Rhythm Heaven. "ローレン" is their 
+VTuber name, not their real identity. So the bot flagged 
+an anonymous creator's own fan community for mentioning 
+that creator's name. Kind of ironic — the system designed 
+to protect anonymous creators can't yet distinguish between 
+"someone leaking a real name" vs "fans talking about their 
+oshi normally."
+
+This actually points to a deeper problem: the bot doesn't 
+know the difference between a creator's public persona name 
+and their private real identity. That distinction is 
+fundamental to what anonymity protection actually means.
+
+**July 2026 — analyzed 5 flagged messages, all false positives:**
+
+Pattern 1: Western names (ローレン) triggering doxxing detection
+Pattern 2: 嫌い (dislike) triggering hate speech — but 嫌い is 
+just a normal Japanese word. 負けず嫌い means "competitive", 
+not hatred toward anyone. The detector has no concept of 
+compound words or context.
+
+So out of 6473 messages across 16 streams, zero genuine 
+harassment detected. Either these communities are genuinely 
+clean, or harmful content is more subtle than my current 
+patterns can catch.
+
+Key insight: Japanese language needs smarter handling than 
+English/Russian. Single-word matching breaks down badly 
+because Japanese compounds words constantly — 嫌い alone 
+means dislike, but in combination it means something 
+completely different.
