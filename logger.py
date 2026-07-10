@@ -31,11 +31,5 @@ def log_message(result, video_id):
     
     data.append(entry)
     
-    # Write safely using a temp file
-    temp_file = LOG_FILE + ".tmp"
-    with open(temp_file, "w", encoding="utf-8") as f:
+    with open(LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    
-    # Only replace original after successful write
-    import os
-    os.replace(temp_file, LOG_FILE)
