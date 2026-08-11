@@ -3,6 +3,15 @@
 
 ---
 
+> **Summary:** I built a real-time harassment detection bot for 
+> YouTube livestreams and tested it on 6,473 messages across 16 
+> streams over 6 weeks. The bot found zero genuine harassment — 
+> but five false positives that all came from the same root 
+> problem: pattern matching without context. This is what I 
+> learned from that.
+
+
+
 ## 1. What I was trying to figure out
 
 Anonymous content creators — VTubers, utaite, indie artists — 

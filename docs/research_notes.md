@@ -102,3 +102,24 @@ English/Russian. Single-word matching breaks down badly
 because Japanese compounds words constantly — 嫌い alone 
 means dislike, but in combination it means something 
 completely different.
+
+**July/August 2026 — built the dashboard, project basically complete:**
+Added a Flask web dashboard so the data is actually visible 
+somewhere instead of just sitting in a json file. Shows total 
+messages, flagged count, and recent chat feed. Looks way more 
+like a real tool now.
+
+Ran final analysis on the full dataset — 6,473 messages, 16 
+streams, 5 flagged, 0 genuine harassment. Dug into exactly 
+what triggered each flag and found they all came from the same 
+bug: 嫌い and 下手くそ were in the DOXXING pattern list, not 
+hate speech. Complete misclassification on my part. Fixed it, 
+which means the corrected false positive rate is actually 0 
+out of 6,473 — the communities I monitored were just genuinely 
+clean.
+
+Not the dramatic result I expected honestly. But I think the 
+more interesting finding is what the false positives revealed 
+about the gap between "keyword matching" and "actually 
+understanding what anonymity means." That gap is basically 
+the whole research question now.
