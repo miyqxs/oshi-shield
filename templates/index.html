@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OshiShield Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #0f0f0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 16px 24px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .stat-card.flagged .number { color: #ff4444; }
+        .stat-card.clean .number { color: #44ff88; }
+
+        .messages-header {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .message {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-left: 3px solid #333;
+        }
+
+        .message.flagged {
+            border-left-color: #ff4444;
+            background: #1f1010;
+        }
+
+        .message .author {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .message .text {
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+
+        .message .reasons {
+            font-size: 11px;
+            color: #ff4444;
+            margin-top: 6px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #ff4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+        }
+
+        .shield {
+            display: inline;
+            color: #4488ff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🛡️ OshiShield <span class="shield">Dashboard</span></h1>
+    <p class="subtitle">Real-time livestream harassment detection for anonymous creators</p>
+
+    <div class="stats" id="stats">
+        <div class="stat-card">
+            <div class="number" id="total">—</div>
+            <div class="label">Total Messages</div>
+        </div>
+        <div class="stat-card flagged">
+            <div class="number" id="flagged">—</div>
+            <div class="label">Flagged</div>
+        </div>
+        <div class="stat-card clean">
+            <div class="number" id="clean">—</div>
+            <div class="label">Clean</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="streams">—</div>
+            <div class="label">Streams Monitored</div>
+        </div>
+    </div>
+
+    <div class="messages-header">Recent messages (newest first)</div>
+    <div id="messages"></div>
+
+    <script>
+        async function loadStats() {
+            const res = await fetch('/api/stats');
+            const data = await res.json();
+            document.getElementById('total').textContent = data.total.toLocaleString();
+            document.getElementById('flagged').textContent = data.flagged;
+            document.getElementById('clean').textContent = data.clean.toLocaleString();
+            document.getElementById('streams').textContent = data.streams;
+        }
+
+        async function loadMessages() {
+            const res = await fetch('/api/messages');
+            const messages = await res.json();
+            const container = document.getElementById('messages');
+            container.innerHTML = '';
+
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = 'message' + (msg.flagged ? ' flagged' : '');
+                
+                div.innerHTML = `
+                    ${msg.flagged ? '<span class="badge">🚨 FLAGGED</span>' : ''}
+                    <div class="author">${msg.author} · ${msg.video_id} · ${msg.timestamp.slice(0,16).replace('T',' ')}</div>
+                    <div class="text">${msg.text}</div>
+                    ${msg.reasons.length ? `<div class="reasons">${msg.reasons.join(', ')}</div>` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        loadStats();
+        loadMessages();
+        setInterval(() => { loadStats(); loadMessages(); }, 10000);
+    </script>
+
+</body>
+</html>
