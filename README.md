@@ -29,7 +29,9 @@ something that could.
 - Flags doxxing attempts (phone numbers, addresses, "found their real name" type stuff)
 - Catches hate speech in English, Russian, and Japanese
 - Detects when multiple accounts post the same harmful message at once — basically catching coordinated pile-ons, not just one rude comment
-- Logs everything locally so I can actually go back and study what gets flagged
+- Logs everything locally so I can go back and study what gets flagged
+- Has a small web dashboard that shows the latest messages and some stats
+- Doesn't fall over when the internet drops or YouTube has a bad moment. It retries, and if something is really wrong it tells you in one line instead of a giant traceback
 
 ---
 
@@ -44,7 +46,27 @@ something that could.
 | 3 | Hate speech detection (EN/RU/JP) | ✅ done |
 | 4 | Coordination detection | ✅ done |
 | 5 | Logging data for research | ✅ done |
-| 6 | Web dashboard | ⏳ working on it |
+| 6 | Web dashboard | ✅ done |
+| 7 | Cleanup after code review (error handling, structure, security) | ✅ done |
+| 8 | Fixing false positives in the detector | ⏳ working on it |
+
+Some friends looked through my code and told me, pretty fairly, what was
+messy. Phase 7 is me fixing that: splitting the big main loop into smaller
+pieces, handling API errors properly, moving the dashboard to FastAPI, and
+closing an XSS hole where chat text was being dropped straight into the page.
+
+---
+
+## What I found so far (and what's still broken)
+
+I ran it on 16 livestreams, around 6,500 messages. It flagged 5 of them, and
+all 5 turned out to be false positives. Mostly because the Japanese matching
+is substring-based, so a word like 嫌い gets caught even when it's just part
+of a longer, harmless word. One VTuber persona name also got mistaken for a
+real identity.
+
+That's the next thing I'm fixing. The full write-up is in
+[`docs/research_findings.md`](docs/research_findings.md).
 
 ---
 
@@ -64,10 +86,26 @@ basically my actual thought process as I build this.
 ## Built with
 
 - Python 3.11+
-- YouTube Data API v3
-- `google-api-python-client`
+- YouTube Data API v3 (`google-api-python-client`)
+- FastAPI + Uvicorn for the dashboard
 - `colorama` for the terminal output
-- Flask (coming soon, for the dashboard)
+
+---
+
+## How the code is laid out
+
+```
+main.py            terminal version: asks for a video ID and starts monitoring
+app.py             FastAPI dashboard
+monitor.py         the main loop: fetch, analyze, save
+youtube_client.py  everything that talks to the YouTube API (and its errors)
+detector.py        doxxing + hate speech checks
+coordinator.py     catches the "many accounts, same message" pile-ons
+analyzer.py        stats over the saved log
+storage.py         saves messages to data/chat_log.json
+utils.py           shared helpers (loading data, logging setup)
+templates/         the dashboard page
+```
 
 ---
 
@@ -83,12 +121,25 @@ Make a `.env` file and drop your YouTube API key in:
 ```bash
 YOUTUBE_API_KEY=your_key_here
 ```
-Then:
+
+**Terminal version:**
 ```bash
 python main.py
 ```
-
 It'll ask for a live video ID and start monitoring.
+
+**Dashboard:**
+```bash
+python -m uvicorn app:app --reload
+```
+Then open http://127.0.0.1:8000. It shows whatever is in the saved log.
+If you also want the dashboard to monitor a stream live, add this to your `.env`:
+```bash
+VIDEO_ID=the_live_video_id
+```
+
+Heads up: chat logs contain real viewers' usernames, so `data/` and `logs/`
+are in `.gitignore` on purpose. Please don't commit them.
 
 ---
 
