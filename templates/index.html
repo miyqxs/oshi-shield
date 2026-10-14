@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OshiShield Dashboard</title>
+    <title data-i18n="title">OshiShield Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -104,37 +104,150 @@
             display: inline;
             color: #4488ff;
         }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        #lang {
+            background: #1a1a1a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <h1>🛡️ OshiShield <span class="shield">Dashboard</span></h1>
-    <p class="subtitle">Real-time livestream harassment detection for anonymous creators</p>
+    <div class="topbar">
+        <div>
+            <h1>🛡️ OshiShield <span class="shield" data-i18n="dashboard">Dashboard</span></h1>
+            <p class="subtitle" data-i18n="subtitle">Real-time livestream harassment detection for anonymous creators</p>
+        </div>
+        <select id="lang" aria-label="Language">
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+            <option value="ja">日本語</option>
+        </select>
+    </div>
 
     <div class="stats" id="stats">
         <div class="stat-card">
             <div class="number" id="total">—</div>
-            <div class="label">Total Messages</div>
+            <div class="label" data-i18n="total">Total Messages</div>
         </div>
         <div class="stat-card flagged">
             <div class="number" id="flagged">—</div>
-            <div class="label">Flagged</div>
+            <div class="label" data-i18n="flagged">Flagged</div>
         </div>
         <div class="stat-card clean">
             <div class="number" id="clean">—</div>
-            <div class="label">Clean</div>
+            <div class="label" data-i18n="clean">Clean</div>
         </div>
         <div class="stat-card">
             <div class="number" id="streams">—</div>
-            <div class="label">Streams Monitored</div>
+            <div class="label" data-i18n="streams">Streams Monitored</div>
         </div>
     </div>
 
-    <div class="messages-header">Recent messages (newest first)</div>
+    <div class="messages-header" data-i18n="recent">Recent messages (newest first)</div>
     <div id="messages"></div>
 
     <script>
-        // Build DOM nodes with textContent so chat text is never parsed as HTML (XSS-safe)
+        // ---------- translations ----------
+        const I18N = {
+            en: {
+                title: 'OshiShield Dashboard',
+                dashboard: 'Dashboard',
+                subtitle: 'Real-time livestream harassment detection for anonymous creators',
+                total: 'Total Messages',
+                flagged: 'Flagged',
+                clean: 'Clean',
+                streams: 'Streams Monitored',
+                recent: 'Recent messages (newest first)',
+                badge: '🚨 FLAGGED',
+                hate: 'Hate speech',
+                doxx: 'Doxxing',
+                doxxOld: 'Doxxing pattern detected',
+                coordinated: 'Coordinated attack: {n} accounts same message'
+            },
+            ru: {
+                title: 'OshiShield — панель',
+                dashboard: 'Панель',
+                subtitle: 'Обнаружение травли в прямых эфирах в реальном времени для анонимных авторов',
+                total: 'Всего сообщений',
+                flagged: 'Помечено',
+                clean: 'Чистые',
+                streams: 'Отслеживаемые стримы',
+                recent: 'Последние сообщения (сначала новые)',
+                badge: '🚨 ПОМЕЧЕНО',
+                hate: 'Язык вражды',
+                doxx: 'Доксинг',
+                doxxOld: 'Обнаружен паттерн доксинга',
+                coordinated: 'Скоординированная атака (аккаунтов: {n}), одно и то же сообщение'
+            },
+            ja: {
+                title: 'OshiShield ダッシュボード',
+                dashboard: 'ダッシュボード',
+                subtitle: '匿名クリエイターのためのライブ配信ハラスメントのリアルタイム検出',
+                total: '総メッセージ数',
+                flagged: '検出',
+                clean: '問題なし',
+                streams: '監視中の配信',
+                recent: '最新のメッセージ（新しい順）',
+                badge: '🚨 検出',
+                hate: 'ヘイトスピーチ',
+                doxx: 'ドキシング',
+                doxxOld: 'ドキシングのパターンを検出',
+                coordinated: '組織的な攻撃：{n}アカウントが同じメッセージを投稿'
+            }
+        };
+
+        let lang = 'en';
+        let lastMessages = [];
+
+        function t(key) {
+            return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+        }
+
+        // The backend writes reasons in English; translate the known ones for display
+        function translateReason(r) {
+            const m = r.match(/^Coordinated attack: (\d+) accounts same message$/);
+            if (m) return t('coordinated').replace('{n}', m[1]);
+            if (r === 'Doxxing pattern detected') return t('doxxOld');
+            if (r.startsWith('Hate speech:')) return t('hate') + ':' + r.slice('Hate speech:'.length);
+            if (r.startsWith('Doxxing:')) return t('doxx') + ':' + r.slice('Doxxing:'.length);
+            return r;
+        }
+
+        function pickLanguage() {
+            try {
+                const saved = localStorage.getItem('lang');
+                if (saved && I18N[saved]) return saved;
+            } catch (e) { /* storage can be blocked */ }
+            const nav = (navigator.language || 'en').slice(0, 2);
+            return I18N[nav] ? nav : 'en';
+        }
+
+        function setLang(next) {
+            lang = I18N[next] ? next : 'en';
+            try { localStorage.setItem('lang', lang); } catch (e) {}
+            document.documentElement.lang = lang;
+            document.title = t('title');
+            document.querySelectorAll('[data-i18n]').forEach(node => {
+                node.textContent = t(node.dataset.i18n);
+            });
+            document.getElementById('lang').value = lang;
+            renderMessages();
+        }
+
+        // ---------- rendering (textContent only, so chat text is never parsed as HTML) ----------
         function el(tag, className, text) {
             const node = document.createElement(tag);
             if (className) node.className = className;
@@ -156,7 +269,7 @@
             const div = el('div', 'message' + (msg.flagged ? ' flagged' : ''));
 
             if (msg.flagged) {
-                div.appendChild(el('span', 'badge', '🚨 FLAGGED'));
+                div.appendChild(el('span', 'badge', t('badge')));
             }
 
             const time = String(msg.timestamp || '').slice(0, 16).replace('T', ' ');
@@ -166,16 +279,20 @@
 
             const reasons = msg.reasons || [];
             if (reasons.length) {
-                div.appendChild(el('div', 'reasons', reasons.join(', ')));
+                div.appendChild(el('div', 'reasons', reasons.map(translateReason).join(', ')));
             }
             return div;
+        }
+
+        function renderMessages() {
+            document.getElementById('messages').replaceChildren(...lastMessages.map(renderMessage));
         }
 
         async function loadMessages() {
             const res = await fetch('/api/messages');
             if (!res.ok) throw new Error('messages HTTP ' + res.status);
-            const messages = await res.json();
-            document.getElementById('messages').replaceChildren(...messages.map(renderMessage));
+            lastMessages = await res.json();
+            renderMessages();
         }
 
         async function refresh() {
@@ -186,6 +303,8 @@
             }
         }
 
+        document.getElementById('lang').addEventListener('change', e => setLang(e.target.value));
+        setLang(pickLanguage());
         refresh();
         setInterval(refresh, 10000);
     </script>
