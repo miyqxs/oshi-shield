@@ -1,37 +1,44 @@
-import json
 from collections import Counter
 
-def load_data():
-    with open('data/chat_log.json', encoding='utf-8') as f:
-        return json.load(f)
+from utils import load_data
 
-def analyze(data):
-    total = len(data)
-    flagged = [m for m in data if m['flagged']]
-    
-    # Messages per video
-    videos = Counter(m['video_id'] for m in data)
-    
-    # Flag reasons
-    all_reasons = []
-    for m in flagged:
-        all_reasons.extend(m['reasons'])
-    reasons = Counter(all_reasons)
-    
+
+def compute_stats(data):
+    flagged = [m for m in data if m.get("flagged")]
+    videos = Counter(m.get("video_id", "unknown") for m in data)
+    reasons = Counter(r for m in flagged for r in m.get("reasons", []))
+
+    return {
+        "total": len(data),
+        "flagged": len(flagged),
+        "clean": len(data) - len(flagged),
+        "streams": len(videos),
+        "videos": dict(videos.most_common()),
+        "reasons": dict(reasons.most_common()),
+    }
+
+
+def print_report(stats):
+    total = stats["total"]
+    flagged = stats["flagged"]
+    clean = stats["clean"]
+    percent = flagged / total * 100 if total else 0.0
+
     print(f"Total messages: {total}")
-    print(f"Flagged: {len(flagged)} ({len(flagged)/total*100:.1f}%)")
-    print(f"Clean: {total - len(flagged)}")
-    print(f"\nStreams monitored: {len(videos)}")
-    for vid, count in videos.most_common():
-        print(f"  {vid}: {count} messages")
-    
-    if reasons:
-        print(f"\nFlag reasons:")
-        for reason, count in reasons.most_common():
+    print(f"Flagged: {flagged} ({percent:.1f}%)")
+    print(f"Clean: {clean}")
+
+    print(f"\nStreams monitored: {stats['streams']}")
+    for video_id, count in stats["videos"].items():
+        print(f"  {video_id}: {count} messages")
+
+    if stats["reasons"]:
+        print("\nFlag reasons:")
+        for reason, count in stats["reasons"].items():
             print(f"  {reason}: {count}")
     else:
-        print(f"\nNo flags triggered — community appears clean")
+        print("\nNo flags triggered — community appears clean")
+
 
 if __name__ == "__main__":
-    data = load_data()
-    analyze(data)
+    print_report(compute_stats(load_data()))

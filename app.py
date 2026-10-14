@@ -1,35 +1,66 @@
-from flask import Flask, render_template, jsonify
-import json
+import logging
+import os
+import threading
+from contextlib import asynccontextmanager
 
-app = Flask(__name__)
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
-def load_data():
+from analyzer import compute_stats
+from monitor import Monitor
+from utils import BASE_DIR, load_data, setup_logging
+from youtube_client import YouTubeClient, YouTubeError
+
+log = logging.getLogger(__name__)
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+stop_event = threading.Event()
+
+
+def run_monitor(video_id):
     try:
-        with open('data/chat_log.json', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return []
+        client = YouTubeClient(os.getenv("YOUTUBE_API_KEY"))
+        Monitor(client, video_id).run(stop_event)
+    except YouTubeError as e:
+        log.error("Monitor stopped: %s", e)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
 
-@app.route('/api/messages')
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    setup_logging()
+    load_dotenv()
+
+    thread = None
+    video_id = os.getenv("VIDEO_ID")  # optional: set it in .env to monitor from the dashboard
+    if video_id:
+        # googleapiclient is blocking, so it gets its own thread and never blocks FastAPI
+        thread = threading.Thread(target=run_monitor, args=(video_id,), daemon=True)
+        thread.start()
+    else:
+        log.info("VIDEO_ID not set: dashboard only (no live monitoring)")
+
+    yield
+
+    stop_event.set()
+    if thread:
+        thread.join(timeout=10)
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    return templates.TemplateResponse(request, "index.html")
+
+
+@app.get("/api/messages")
 def messages():
-    data = load_data()
-    # Send last 100 messages, newest first
-    return jsonify(data[-100:][::-1])
+    # last 100, newest first
+    return load_data()[-100:][::-1]
 
-@app.route('/api/stats')
+
+@app.get("/api/stats")
 def stats():
-    data = load_data()
-    flagged = [m for m in data if m['flagged']]
-    return jsonify({
-        'total': len(data),
-        'flagged': len(flagged),
-        'clean': len(data) - len(flagged),
-        'streams': len(set(m['video_id'] for m in data))
-    })
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    return compute_stats(load_data())

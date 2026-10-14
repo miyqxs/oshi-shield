@@ -1,35 +1,15 @@
+import logging
 import os
-import time
-from coordinator import CoordinationDetector
-from dotenv import load_dotenv
-from googleapiclient.discovery import build
+import sys
+import threading
+
 from colorama import Fore, Style, init
-from detector import analyze_message
-from logger import log_message
+from dotenv import load_dotenv
 
-init()  # Start colorama
+from monitor import Monitor
+from utils import setup_logging
+from youtube_client import YouTubeClient, YouTubeError
 
-load_dotenv()
-API_KEY = os.getenv("YOUTUBE_API_KEY")
-youtube = build("youtube", "v3", developerKey=API_KEY)
-
-def get_live_chat_id(video_id):
-    response = youtube.videos().list(
-        part="liveStreamingDetails",
-        id=video_id
-    ).execute()
-    if not response["items"]:
-        print("Video not found or not a livestream")
-        return None
-    details = response["items"][0].get("liveStreamingDetails", {})
-    return details.get("activeLiveChatId")
-
-def get_chat_messages(live_chat_id):
-    response = youtube.liveChatMessages().list(
-        liveChatId=live_chat_id,
-        part="snippet,authorDetails"
-    ).execute()
-    return response.get("items", [])
 
 def display_message(result):
     if result["flagged"]:
@@ -41,43 +21,28 @@ def display_message(result):
     else:
         print(f"{Fore.GREEN}✓{Style.RESET_ALL} {result['author']}: {result['text']}")
 
+
 def main():
-    video_id = input("Enter YouTube live video ID: ")
-    print("Connecting to livestream...")
-    
-    chat_id = get_live_chat_id(video_id)
-    if not chat_id:
-        print("Could not find active live chat.")
+    init()  # colorama
+    load_dotenv()
+    setup_logging(logging.WARNING)  # keep the terminal clean; full log goes to logs/
+
+    video_id = input("Enter YouTube live video ID: ").strip()
+    if not video_id:
+        print("No video ID given.")
         return
 
-    print(f"Connected! Monitoring for harmful content...\n")
-    seen_ids = set()
-    coordinator = CoordinationDetector(time_window_seconds=60, threshold=3)
+    try:
+        client = YouTubeClient(os.getenv("YOUTUBE_API_KEY"))
+        monitor = Monitor(client, video_id, on_result=display_message)
+        print("Connecting to livestream...")
+        monitor.run(threading.Event())
+    except YouTubeError as e:
+        print(f"{Fore.RED}Error:{Style.RESET_ALL} {e}")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\nStopped.")
 
-    while True:
-        try:
-            messages = get_chat_messages(chat_id)
-        except Exception as e:
-            print(f"⚠️  Connection hiccup, retrying in 5s... ({e})")
-            time.sleep(5)
-            continue
-
-        for msg in messages:
-            msg_id = msg["id"]
-            if msg_id not in seen_ids:
-                seen_ids.add(msg_id)
-                author = msg["authorDetails"]["displayName"]
-                text = msg["snippet"]["displayMessage"]
-                result = analyze_message(author, text)
-                # Check coordination
-                coordinated, count = coordinator.add_and_check(author, text, is_harmful=result["flagged"])
-                if coordinated:
-                    result["flagged"] = True
-                    result["reasons"].append(f"Coordinated attack: {count} accounts same message")
-
-                display_message(result)
-                log_message(result, video_id)
-        time.sleep(5)
 
 if __name__ == "__main__":
     main()
